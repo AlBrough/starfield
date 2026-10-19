@@ -22,6 +22,16 @@ See [VALIDATION.md](VALIDATION.md) for observed checks and remaining release gat
 
 Run `powershell -ExecutionPolicy Bypass -File .\verify-layout.ps1` after building to check settings layout and slider binding. The script opens temporary settings windows and writes a preview image into `dist`.
 
+Run `powershell -ExecutionPolicy Bypass -File .\verify-behaviour.ps1` to check motion calculations, typing, keyboard increments, 50 FPS selection, natural colours and compatibility with older settings.
+
+## Appearance and motion
+
+Number fields support direct typing, minus/plus clicks and Up/Down keys. Sliders support dragging and arrow keys. Dropdowns support keyboard selection. Frame-rate options include 30, 50, 60, 90, 120 and 144 FPS; these are target ceilings, not a guarantee of performance or display synchronisation.
+
+Natural star colours use a restrained mix of near-white, blue-white, cream, amber and orange tones. Each star retains its assigned colour until it is recycled. The palette is inspired by [NASA's overview of stellar colour classes](https://science.nasa.gov/exoplanets/stars/), with artistic proportions rather than a scientific population model. Disable Natural star colours for a single chosen colour; selecting a star colour does this automatically. Chromatic shift overrides both while enabled.
+
+Motion trails use a fixed exposure duration instead of the previous frame's duration, so uneven frame times do not make streak lengths pulse. Lines are antialiased and frame requests use a finer timer while the preview or screensaver is open. The renderer is still CPU-based and does not provide VSync. Actual smoothness depends on resolution, star count and the computer. Lower FPS or star counts may help on slower machines.
+
 ## Licence
 
 Copyright (c) 2026 Al Brough. Licensed under the [MIT licence](LICENSE), allowing personal and commercial use, modification and redistribution with the licence notice preserved. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependency and reference-image boundaries. Include both files when sharing the built application.
