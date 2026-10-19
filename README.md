@@ -20,6 +20,8 @@ Build validation is recorded separately from interactive testing. Windows previe
 
 See [VALIDATION.md](VALIDATION.md) for observed checks and remaining release gates.
 
+Run `powershell -ExecutionPolicy Bypass -File .\verify-layout.ps1` after building to check settings layout and slider binding. The script opens temporary settings windows and writes a preview image into `dist`.
+
 ## Licence
 
 Copyright (c) 2026 Al Brough. Licensed under the [MIT licence](LICENSE), allowing personal and commercial use, modification and redistribution with the licence notice preserved. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependency and reference-image boundaries. Include both files when sharing the built application.
