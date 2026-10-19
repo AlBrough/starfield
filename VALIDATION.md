@@ -4,7 +4,7 @@ Checked 19/10/2026 on Windows x64.
 
 ## Observed
 
-- The .NET Framework compiler built BroughStarfield.scr successfully.
+- The .NET Framework compiler built Starfield.scr successfully.
 - The settings form was instantiated and displayed through Windows Forms without an exception.
 - The renderer produced 20 frames at 1280 x 720 with the default 10,000 stars in 336 ms in an off-screen smoke check. This is not a display frame-rate benchmark.
 - The generated starfield image was visually inspected.

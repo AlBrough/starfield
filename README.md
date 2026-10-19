@@ -1,10 +1,10 @@
-# Brough Starfield
+# Starfield
 
 A standalone Windows starfield screensaver with a live settings preview, adjustable star count, speed, size, motion stretch, colours, chromatic shift and frame rate. Supports a single desktop, individual monitors or the current mouse position as the centre.
 
 ## Build
 
-Run `powershell -ExecutionPolicy Bypass -File .\build.ps1` on Windows with .NET Framework 4.8. The built file is `dist\BroughStarfield.scr`. No packages or administrator access are needed to build.
+Run `powershell -ExecutionPolicy Bypass -File .\build.ps1` on Windows with .NET Framework 4.8. The built file is `dist\Starfield.scr`. No packages or administrator access are needed to build.
 
 ## Use
 

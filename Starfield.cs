@@ -70,7 +70,7 @@ public class Saver : Form {
 public class Configuration : Form {
  readonly Settings settings; readonly Field preview; readonly TableLayoutPanel grid=new TableLayoutPanel(); int row;
  public Configuration(Settings options) {
-  settings=options; Text="Brough Starfield - Settings"; Font=new Font("Segoe UI",10); AutoScaleMode=AutoScaleMode.Dpi; MinimumSize=new Size(820,660); Size=new Size(1000,740); StartPosition=FormStartPosition.CenterScreen;
+  settings=options; Text="Starfield - Settings"; Font=new Font("Segoe UI",10); AutoScaleMode=AutoScaleMode.Dpi; MinimumSize=new Size(820,660); Size=new Size(1000,740); StartPosition=FormStartPosition.CenterScreen;
   var split=new SplitContainer {Dock=DockStyle.Fill,SplitterDistance=450,FixedPanel=FixedPanel.Panel1}; Controls.Add(split);
   grid.Dock=DockStyle.Fill; grid.Padding=new Padding(20); grid.ColumnCount=2; grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,45)); grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,55)); grid.AutoScroll=true; split.Panel1.Controls.Add(grid);
   preview=new Field(settings); split.Panel2.Controls.Add(preview);
