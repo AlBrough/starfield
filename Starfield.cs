@@ -14,10 +14,26 @@ public class Settings {
  public float Size=1, Stretch=2;
  public bool Motion=true, Shift=false, NaturalColours=true, DensityCycle=true;
  public int DensityMinutes=12;
+ float warpFactor=-1;
+ public float WarpFactor {get{return warpFactor<1?WarpMath.FromLegacySpeed(Speed):warpFactor;}set{warpFactor=WarpMath.Clamp(value);}}
  public string Centre="Desktop";
  static string PathName { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Brough","Starfield","settings.xml"); } }
  public static Settings Load() { try { using(var f=File.OpenRead(PathName)) { var s=(Settings)new XmlSerializer(typeof(Settings)).Deserialize(f); s.Stars=Math.Max(100,Math.Min(30000,s.Stars)); s.Speed=Math.Max(1,Math.Min(200,s.Speed)); s.Fps=Math.Max(15,Math.Min(144,s.Fps)); s.Size=Math.Max(.25f,Math.Min(5,s.Size)); s.Stretch=Math.Max(0,Math.Min(10,s.Stretch)); return s; } } catch { return new Settings(); } }
  public void Save() { Directory.CreateDirectory(Path.GetDirectoryName(PathName)); string temp=PathName+".tmp"; using(var f=File.Create(temp)) new XmlSerializer(typeof(Settings)).Serialize(f,this); if(File.Exists(PathName)) File.Replace(temp,PathName,null); else File.Move(temp,PathName); }
+}
+public static class WarpMath {
+ public static float Clamp(float warp) {return float.IsNaN(warp)||float.IsInfinity(warp)?1:Math.Max(1,Math.Min(9.99f,warp));}
+ // Artistic screen-space mapping, not a conversion from light speed to pixels.
+ public static double VisualSpeed(float warp) {
+  double w=Clamp(warp);
+  if(w<=9)return 1+89*Math.Pow((w-1)/8,1.6);
+  return 90+55*Math.Log10(1/(10-w));
+ }
+ public static float FromLegacySpeed(int speed) {
+  double target=Math.Max(1,Math.Min(200,speed)); float low=1,high=9.99f;
+  for(int i=0;i<32;i++){float middle=(low+high)/2;if(VisualSpeed(middle)<target)low=middle;else high=middle;}
+  return (low+high)/2;
+ }
 }
 public static class DensityMath {
  public static double Fraction(double seconds,int minutes,bool enabled) {
@@ -33,8 +49,8 @@ public static class DensityMath {
 }
 public static class MotionMath {
  // A fixed 1/60 second exposure keeps trail length independent of timer jitter and FPS.
- public static float TailDepth(float depth,int speed,float stretch) {return depth+(float)(speed*.0025*stretch/60.0);}
- public static float Advance(float depth,int speed,double seconds) {return depth-(float)(seconds*speed*.0025);}
+ public static float TailDepth(float depth,double speed,float stretch) {return depth+(float)(speed*.0025*stretch/60.0);}
+ public static float Advance(float depth,double speed,double seconds) {return depth-(float)(seconds*speed*.0025);}
 }
 public static class StarPalette {
  // Restrained artistic mix inspired by stellar colour classes, not a star census.
@@ -64,6 +80,7 @@ public class Field : Control {
   if(stars==null||stars.Length!=o.Stars) { stars=new Star[o.Stars]; for(int i=0;i<stars.Length;i++)stars[i]=NewStar(true); }
   double dt=last==0?0:Math.Max(0,Math.Min(.05,now-last)); last=now;
   double density=DensityMath.Fraction(now,o.DensityMinutes,o.DensityCycle);
+  double speed=WarpMath.VisualSpeed(o.WarpFactor);
   float scale=Math.Max(Width,Height)*.65f,cx=Width*Origin.X,cy=Height*Origin.Y;
   Color colour=Color.FromArgb(o.StarColour);
   if(o.Shift) { double h=now*.15; colour=Color.FromArgb((int)(155+100*Math.Sin(h)),(int)(155+100*Math.Sin(h+2.094)),(int)(155+100*Math.Sin(h+4.188))); }
@@ -71,7 +88,7 @@ public class Field : Control {
   using(var pen=new Pen(colour)) using(var brush=new SolidBrush(colour)) {
    pen.StartCap=pen.EndCap=LineCap.Round;
    for(int i=0;i<stars.Length;i++) {
-    Star s=stars[i]; s.Z=MotionMath.Advance(s.Z,o.Speed,dt);
+    Star s=stars[i]; s.Z=MotionMath.Advance(s.Z,speed,dt);
     if(s.Z<.015f) { s=NewStar(false); }
     float x=cx+s.X/s.Z*scale,y=cy+s.Y/s.Z*scale;
     if(x< -30||x>Width+30||y< -30||y>Height+30) { stars[i]=NewStar(false); continue; }
@@ -80,7 +97,7 @@ public class Field : Control {
     int alpha=(int)((40+215*(1-s.Z))*visibility); if(alpha==0)continue;
     var c=Color.FromArgb(alpha,o.NaturalColours&&!o.Shift?s.Colour:colour); pen.Color=c; brush.Color=c;
     float size=Math.Max(.6f,o.Size*(.35f+1.8f*(1-s.Z))); pen.Width=size;
-    if(o.Motion&&o.Stretch>0) { float tail=MotionMath.TailDepth(s.Z,o.Speed,o.Stretch); graphics.DrawLine(pen,cx+s.X/tail*scale,cy+s.Y/tail*scale,x,y); }
+    if(o.Motion&&o.Stretch>0) { float tail=MotionMath.TailDepth(s.Z,speed,o.Stretch); graphics.DrawLine(pen,cx+s.X/tail*scale,cy+s.Y/tail*scale,x,y); }
     else graphics.FillEllipse(brush,x-size/2,y-size/2,size,size);
     stars[i]=s;
    }
@@ -125,7 +142,8 @@ public class Configuration : Form {
   Number("Number of stars",100,30000,100,settings.Stars,0,delegate(decimal v){settings.Stars=(int)v;});
   Check("Vary star density",settings.DensityCycle,delegate(bool v){settings.DensityCycle=v;});
   Number("Cycle length (minutes)",5,15,1,Math.Max(5,Math.Min(15,settings.DensityMinutes)),0,delegate(decimal v){settings.DensityMinutes=(int)v;});
-  Number("Speed",1,200,1,settings.Speed,0,delegate(decimal v){settings.Speed=(int)v;});
+  Number("Warp factor",1,9.99m,.01m,(decimal)settings.WarpFactor,2,delegate(decimal v){settings.WarpFactor=(float)v;});
+  Add(new Label {Text="Warp 10 is infinite. Visual speed is scaled.",ForeColor=muted,AutoSize=true});
   Number("Star size",.25m,5,.25m,(decimal)settings.Size,2,delegate(decimal v){settings.Size=(float)v;});
   Check("Motion stretch",settings.Motion,delegate(bool v){settings.Motion=v;});
   Number("Stretch amount",0,10,.1m,(decimal)settings.Stretch,1,delegate(decimal v){settings.Stretch=(float)v;});

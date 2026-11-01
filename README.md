@@ -26,6 +26,8 @@ Run `powershell -ExecutionPolicy Bypass -File .\verify-behaviour.ps1` to check m
 
 ## Appearance and motion
 
+**Warp factor** replaces the old speed control with a TNG-inspired range from 1.00 - 9.99. Motion increases progressively, then more steeply above Warp 9. Warp 10 represents infinite velocity and is not selectable. This is an artistic screen-space mapping, not a physically accurate light-speed simulation or an official Star Trek speed conversion. Existing speed settings are converted to a warp factor that preserves their animation pace. Direct typing and minus/plus controls adjust by 0.01. Run `verify-warp.ps1` after building to check migration, monotonic speed, input limits, XML persistence and actual renderer movement.
+
 **Vary star density** gradually cycles between your selected star count and roughly 30% of it. The default full dense-to-sparse-to-dense cycle is 12 minutes, adjustable from 5 - 15 minutes. It starts dense, reaches its sparsest point halfway through and returns to full density at the end. Stars fade individually and continue moving throughout; the cycle does not recreate the star array or change speed. Disable the option for constant density. Existing settings gain the enabled 12-minute default.
 
 Number fields support direct typing, minus/plus clicks and Up/Down keys. Sliders support dragging and arrow keys. Dropdowns support keyboard selection. Frame-rate options include 30, 50, 60, 90, 120 and 144 FPS; these are target ceilings, not a guarantee of performance or display synchronisation.

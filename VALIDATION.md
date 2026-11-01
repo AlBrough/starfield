@@ -44,3 +44,11 @@ Version 0.1.2 was promoted to a stable GitHub release at the owner's explicit re
 - Synthetic-clock checks pass at 5, 10, 12 and 15 minutes. The continuity bound accounts for the faster five-minute cycle.
 - UI binding and XML round-trip now explicitly verify five minutes. Existing behaviour and layout checks pass.
 - DENS-01 remains pending and now uses the five-minute setting in CHECKLIST.md to verify the expanded range. No previous automated passes have been removed.
+
+## Warp control - 02/11/2026
+
+- Version 0.1.5 replaces the speed UI with a TNG-inspired factor from 1.00 - 9.99 and an explicit visual-scaling note. No official physical velocity is claimed.
+- Warp checks pass for finite, increasing motion across every 0.01 step, representative legacy speeds from 1 - 200, old XML migration, the 9.99 input limit and settings round-trip.
+- Real-renderer star-depth changes match the selected warp factor at 1, 9 and 9.99 with the legacy Speed field unchanged.
+- Existing behaviour, density and layout checks pass. The settings window was rendered and visually inspected.
+- WARP-01 remains a manual acceptance check in CHECKLIST.md. Smoothness at high warp on the user's display is not established by these automated results.
