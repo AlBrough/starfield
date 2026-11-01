@@ -62,3 +62,10 @@ Version 0.1.2 was promoted to a stable GitHub release at the owner's explicit re
 - The original chime's WAV structure and SoundPlayer loading pass without playing audio. Audible output, volume and device behaviour remain unverified.
 - The previous warp, density, behaviour and simulated layout checks pass.
 - Real-time perception, combined-effect performance at target resolution, preview-to-normal transitions and audible chime acceptance remain manual checks. FLIGHT-01 in CHECKLIST.md is the next user action.
+
+## Stationary bridge panel - 02/11/2026
+
+- Version 0.1.7 anchors the bridge readout at the bottom left, reserves fixed dimensions for alert text and replaces HDG with HEADING (simulated direction of travel).
+- Actual rendered pixel bounds remain unchanged at 0, 60, 300 and 900 seconds, including alert text, at 960 x 600 and 1920 x 1080. The check passes in PowerShell 7 and Windows PowerShell 5.1.
+- The stationary panel image was visually inspected. Existing effects, warp, density, behaviour and simulated layout checks pass.
+- BRIDGE-01 is the next manual display check; previous passes and pending tests remain recorded in CHECKLIST.md.

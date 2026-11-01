@@ -52,10 +52,10 @@ sealed class FlightPainter : IDisposable {
    float nextSize=Math.Max(8,Math.Min(14,size.Width/65f));
    if(bridgeFont==null||Math.Abs(fontSize-nextSize)>.1){if(bridgeFont!=null)bridgeFont.Dispose();fontSize=nextSize;bridgeFont=new Font("Consolas",fontSize,FontStyle.Regular);}
    double heading=(90+frame.OffsetX*180+360)%360;
-   string label=string.Format(System.Globalization.CultureInfo.InvariantCulture,"WARP {0:0.00}   HDG {1:000.0}\nSIM STARDATE {2:00000.00}{3}",frame.Warp,heading,60200+time/86400,frame.Alert>.1?"   RED ALERT":"");
-   SizeF measured=g.MeasureString(label,bridgeFont);float width=Math.Min(size.Width-20,measured.Width+24),height=measured.Height+20;
-   float x=10+(float)((Math.Sin(time*.013)+1)*.5)*Math.Max(0,size.Width-width-20);
-   float y=10+(float)((Math.Cos(time*.011)+1)*.5)*Math.Max(0,size.Height-height-20);
+   string label=string.Format(System.Globalization.CultureInfo.InvariantCulture,"WARP {0:0.00}   HEADING {1:000.0}\nSIM STARDATE {2:00000.00}{3}",frame.Warp,heading,60200+time/86400,frame.Alert>.1?"   RED ALERT":"");
+   // Reserve alert text space so both the position and panel dimensions stay fixed.
+   SizeF measured=g.MeasureString("WARP 9.99   HEADING 360.0\nSIM STARDATE 99999.99   RED ALERT",bridgeFont);float width=Math.Min(size.Width-20,measured.Width+24),height=measured.Height+20;
+   float x=10,y=Math.Max(10,size.Height-height-10);
    using(var path=Theme.Rounded(new RectangleF(x,y,width,height),8))using(var fill=new SolidBrush(Color.FromArgb(155,12,19,29)))using(var ink=new SolidBrush(Color.FromArgb(180,180,210,240))){g.FillPath(fill,path);g.DrawString(label,bridgeFont,ink,new RectangleF(x+12,y+10,width-24,height-16));}
   }
   // Sound is independently opt-in. One original synthesised chime per alert passage.
