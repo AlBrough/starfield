@@ -37,3 +37,10 @@ Version 0.1.2 was promoted to a stable GitHub release at the owner's explicit re
 - Cycle toggle and period controls, XML round-trip and older settings without the new fields pass.
 - Existing behaviour and simulated layout regression checks pass.
 - A real-time 12-minute cycle on the user's display remains pending as DENS-01 in CHECKLIST.md. Automated clock checks do not establish perceived smoothness or long-run reliability on that display.
+
+## Expanded period range - 02/11/2026
+
+- Version 0.1.4 extends the selectable full-cycle range to 5 - 15 minutes. Default remains 12 minutes and minimum density remains roughly 30%.
+- Synthetic-clock checks pass at 5, 10, 12 and 15 minutes. The continuity bound accounts for the faster five-minute cycle.
+- UI binding and XML round-trip now explicitly verify five minutes. Existing behaviour and layout checks pass.
+- DENS-01 remains pending and now uses the five-minute setting in CHECKLIST.md to verify the expanded range. No previous automated passes have been removed.

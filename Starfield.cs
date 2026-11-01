@@ -22,7 +22,7 @@ public class Settings {
 public static class DensityMath {
  public static double Fraction(double seconds,int minutes,bool enabled) {
   if(!enabled)return 1;
-  double period=Math.Max(10,Math.Min(15,minutes))*60.0;
+  double period=Math.Max(5,Math.Min(15,minutes))*60.0;
   return .65+.35*Math.Cos(2*Math.PI*(seconds%period)/period);
  }
  public static double Opacity(int index,int count,double fraction) {
@@ -124,7 +124,7 @@ public class Configuration : Form {
   Section("MOTION");
   Number("Number of stars",100,30000,100,settings.Stars,0,delegate(decimal v){settings.Stars=(int)v;});
   Check("Vary star density",settings.DensityCycle,delegate(bool v){settings.DensityCycle=v;});
-  Number("Cycle length (minutes)",10,15,1,Math.Max(10,Math.Min(15,settings.DensityMinutes)),0,delegate(decimal v){settings.DensityMinutes=(int)v;});
+  Number("Cycle length (minutes)",5,15,1,Math.Max(5,Math.Min(15,settings.DensityMinutes)),0,delegate(decimal v){settings.DensityMinutes=(int)v;});
   Number("Speed",1,200,1,settings.Speed,0,delegate(decimal v){settings.Speed=(int)v;});
   Number("Star size",.25m,5,.25m,(decimal)settings.Size,2,delegate(decimal v){settings.Size=(float)v;});
   Check("Motion stretch",settings.Motion,delegate(bool v){settings.Motion=v;});

@@ -5,7 +5,7 @@ $assembly = [Reflection.Assembly]::LoadFile((Join-Path $PSScriptRoot 'dist\Starf
 $density = $assembly.GetType('Brough.Starfield.DensityMath')
 $fraction = $density.GetMethod('Fraction')
 $opacity = $density.GetMethod('Opacity')
-foreach ($minutes in @(10,12,15)) {
+foreach ($minutes in @(5,10,12,15)) {
     $period = $minutes*60
     foreach ($sample in @(@(0,1.0),@(($period/2),0.3),@($period,1.0),@(($period*100),1.0))) {
         $actual = $fraction.Invoke($null,@([double]$sample[0],$minutes,$true))
@@ -14,7 +14,7 @@ foreach ($minutes in @(10,12,15)) {
     $previous = 1.0
     foreach ($second in 1..$period) {
         $value = $fraction.Invoke($null,@([double]$second,$minutes,$true))
-        if ($value -lt 0.299999 -or $value -gt 1.000001 -or [Math]::Abs($value-$previous) -gt 0.004) { throw 'Cycle bounds or continuity failed' }
+        if ($value -lt 0.299999 -or $value -gt 1.000001 -or [Math]::Abs($value-$previous) -gt (0.35*2*[Math]::PI/$period+0.000001)) { throw 'Cycle bounds or continuity failed' }
         $previous = $value
     }
 }
@@ -64,13 +64,13 @@ try {
     $toggle.Checked=$false
     if ($settings.DensityCycle) {throw 'Cycle toggle binding failed'}
     $length = @($controls | Where-Object { $_.GetType().Name -eq 'NumberInput' -and $_.AccessibleName -eq 'Cycle length (minutes)' })[0]
-    $length.Value=15
-    if ($settings.DensityMinutes -ne 15) {throw 'Cycle length binding failed'}
+    $length.Value=5
+    if ($settings.DensityMinutes -ne 5) {throw 'Cycle length binding failed'}
 } finally {$window.Dispose()}
 $serializer = [Xml.Serialization.XmlSerializer]::new($settings.GetType())
 $writer = [IO.StringWriter]::new(); $serializer.Serialize($writer,$settings)
 $reader = [IO.StringReader]::new($writer.ToString())
-try {$loaded=$serializer.Deserialize($reader);if($loaded.DensityCycle -or $loaded.DensityMinutes -ne 15){throw 'Cycle settings round-trip failed'}}finally{$reader.Dispose();$writer.Dispose()}
+try {$loaded=$serializer.Deserialize($reader);if($loaded.DensityCycle -or $loaded.DensityMinutes -ne 5){throw 'Cycle settings round-trip failed'}}finally{$reader.Dispose();$writer.Dispose()}
 $reader = [IO.StringReader]::new('<Settings><Stars>10000</Stars><Fps>30</Fps></Settings>')
 try {$loaded=$serializer.Deserialize($reader);if(!$loaded.DensityCycle -or $loaded.DensityMinutes -ne 12 -or $loaded.Fps -ne 30){throw 'Old settings compatibility failed'}}finally{$reader.Dispose()}
 Write-Output 'Density cycle, fade bounds, real renderer, controls and settings compatibility checks passed.'
