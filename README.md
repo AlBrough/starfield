@@ -48,7 +48,7 @@ All flight effects are separate opt-in settings under **FLIGHT EFFECTS**. They d
 | Vary cruising speed | Smooth three-minute speed variation, independent of density. The selected warp factor is the normal cruising ceiling. |
 | Course corrections | Gentle 30-second shifts in the vanishing point, starting after 35 seconds and repeating every 100 seconds. |
 | Nebula passages | Faint procedural clouds for 70 seconds, starting after 90 seconds and repeating every seven minutes. |
-| Bridge display | A stationary translucent panel in the bottom-left corner, showing warp factor, HEADING (simulated direction of travel) and an explicitly fictional SIM STARDATE. Its size stays fixed when alert text appears. |
+| Bridge display | A stationary translucent panel in the bottom-left corner, showing warp factor, HEADING (simulated direction of travel) and an approximate TNG-era SIM STARDATE. Its size stays fixed when alert text appears. |
 | Red alert | An eight-second slow red border pulse with a bounded acceleration, starting after two minutes and repeating every five minutes. No rapid flashes. |
 | Alert sound | Independently opt-in original synthesised chime, once per alert. Requires Red alert. Off by default. |
 
@@ -57,6 +57,12 @@ Click **Preview selected effects** to bring the selected timed events forward in
 Run `verify-effects.ps1` after building for independent effect checks, bounded combinations, actual rendering, settings compatibility, preview wiring and sound-file format validation. It does not play the chime; audible acceptance is a manual check.
 
 Run `verify-bridge.ps1` to check the actual rendered bridge panel remains fixed at the bottom left across elapsed times and alert text, at preview and Full HD sizes.
+
+The starting heading is randomised once per application launch and shared by its monitor windows. Course corrections, when enabled, adjust that heading with compass wrapping. Restarting the application gives another random heading; it is not regenerated each frame or when opening a preview in the same process.
+
+The stardate uses the computer's local date and time, independent of the preview/session timer. This application's explicit approximation maps local year +338 to a fictional year, anchors 2364 at 41000 and adds 1000 stardate units per local calendar year. Thus 2026 gives 41xxx, 2027 gives 42xxx and 2032 gives 47xxx, continuing onwards after that. The fraction of the local year accounts for leap days. This is a chosen TNG-era calendar convention, not a claim of an official canon date conversion. Three decimal places show a tick roughly every 32 seconds. Restarting or previewing effects does not reset the date; changing the computer clock changes the readout.
+
+Run `verify-navigation.ps1` to check heading randomness/ranges, compass wrapping, calendar anchors, visible clock ticks, year rollover and leap-day progression.
 
 ## Licence
 

@@ -4,8 +4,23 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Media;
+using System.Security.Cryptography;
 
 namespace Brough.Starfield {
+public static class NavigationMath {
+ public static double RandomHeading(){var bytes=new byte[4];using(var generator=RandomNumberGenerator.Create())generator.GetBytes(bytes);return BitConverter.ToUInt32(bytes,0)/4294967296.0*360;}
+ public static double Heading(double initial,float correction){return Math.Round(((initial+correction*180)%360+360)%360,1)%360;}
+ // App convention: local year +338; 2364 starts at 41000, 1000 units/local year.
+ // This is an explicit TNG-era approximation, not an official canon conversion.
+ public static double Stardate(DateTime localDate){
+  DateTime start=new DateTime(localDate.Year,1,1);
+  double secondsInYear=(DateTime.IsLeapYear(localDate.Year)?366:365)*86400.0;
+  return (localDate.Year+338-2323)*1000.0+(localDate-start).TotalSeconds/secondsInYear*1000;
+ }
+}
+static class NavigationSession {
+ public static readonly double Heading=NavigationMath.RandomHeading();
+}
 public struct FlightFrame {
  public float Warp, ExtraStretch, OffsetX, OffsetY, Nebula, Alert;
 }
@@ -51,10 +66,10 @@ sealed class FlightPainter : IDisposable {
   if(options.BridgeDisplay&&size.Width>=200&&size.Height>=120){
    float nextSize=Math.Max(8,Math.Min(14,size.Width/65f));
    if(bridgeFont==null||Math.Abs(fontSize-nextSize)>.1){if(bridgeFont!=null)bridgeFont.Dispose();fontSize=nextSize;bridgeFont=new Font("Consolas",fontSize,FontStyle.Regular);}
-   double heading=(90+frame.OffsetX*180+360)%360;
-   string label=string.Format(System.Globalization.CultureInfo.InvariantCulture,"WARP {0:0.00}   HEADING {1:000.0}\nSIM STARDATE {2:00000.00}{3}",frame.Warp,heading,60200+time/86400,frame.Alert>.1?"   RED ALERT":"");
+   double heading=NavigationMath.Heading(NavigationSession.Heading,frame.OffsetX);
+   string label=string.Format(System.Globalization.CultureInfo.InvariantCulture,"WARP {0:0.00}   HEADING {1:000.0}\nSIM STARDATE {2:00000.000}{3}",frame.Warp,heading,NavigationMath.Stardate(DateTime.Now),frame.Alert>.1?"   RED ALERT":"");
    // Reserve alert text space so both the position and panel dimensions stay fixed.
-   SizeF measured=g.MeasureString("WARP 9.99   HEADING 360.0\nSIM STARDATE 99999.99   RED ALERT",bridgeFont);float width=Math.Min(size.Width-20,measured.Width+24),height=measured.Height+20;
+   SizeF measured=g.MeasureString("WARP 9.99   HEADING 359.9\nSIM STARDATE 99999.999   RED ALERT",bridgeFont);float width=Math.Min(size.Width-20,measured.Width+24),height=measured.Height+20;
    float x=10,y=Math.Max(10,size.Height-height-10);
    using(var path=Theme.Rounded(new RectangleF(x,y,width,height),8))using(var fill=new SolidBrush(Color.FromArgb(155,12,19,29)))using(var ink=new SolidBrush(Color.FromArgb(180,180,210,240))){g.FillPath(fill,path);g.DrawString(label,bridgeFont,ink,new RectangleF(x+12,y+10,width-24,height-16));}
   }

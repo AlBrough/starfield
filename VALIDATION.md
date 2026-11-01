@@ -69,3 +69,11 @@ Version 0.1.2 was promoted to a stable GitHub release at the owner's explicit re
 - Actual rendered pixel bounds remain unchanged at 0, 60, 300 and 900 seconds, including alert text, at 960 x 600 and 1920 x 1080. The check passes in PowerShell 7 and Windows PowerShell 5.1.
 - The stationary panel image was visually inspected. Existing effects, warp, density, behaviour and simulated layout checks pass.
 - BRIDGE-01 is the next manual display check; previous passes and pending tests remain recorded in CHECKLIST.md.
+
+## Navigation and calendar - 02/11/2026
+
+- Version 0.1.8 randomises the launch heading once per application process, shared across monitor windows, and wraps course corrections into the compass range.
+- SIM STARDATE now uses the computer's local clock and the documented +338-year approximation: 2364 starts at 41000, with 1000 units per local year. It is independent of preview/session elapsed time.
+- Navigation checks pass for random heading range and diversity, stable session heading, compass wrap and rounding, date anchors, visible ticks over 40 seconds, year rollover and even leap-day progression.
+- The bridge pixel-bounds check passes with the additional stardate digit. Existing effects, warp, density, behaviour and simulated layout checks pass.
+- NAV-01 in CHECKLIST.md is the next manual test. No exact canonical stardate conversion is claimed.

@@ -4,7 +4,7 @@ Updated 02/11/2026.
 
 ## Current update
 
-Version 0.1.7 fixes the bridge display at the bottom left and spells out HEADING. All six independent flight options and the optional chime remain available, off by default. A 20-second preview brings selected events forward. Existing warp and density controls remain available. No cloud services or new dependencies.
+Version 0.1.8 adds a random starting heading per application launch and a clock-driven, approximate TNG-era stardate, while preserving the stationary bridge panel. All six independent flight options, optional chime, warp and density controls remain available. No cloud services or new dependencies.
 
 ## Recorded passes
 
@@ -19,12 +19,15 @@ Version 0.1.7 fixes the bridge display at the bottom left and spells out HEADING
 - PASS: combined, nebula-only and red-alert render inspection.
 - PASS: original chime WAV format and SoundPlayer loading, without playback.
 - PASS: actual bridge-panel pixel bounds remain fixed across elapsed times and alert text at preview and Full HD sizes, in PowerShell 7 and Windows PowerShell 5.1; stationary image visually inspected.
+- PASS: random heading bounds and diversity, compass wrap, stable session heading, TNG-era date anchors, visible ticks, year rollover and even leap-day progression.
 
 ## Next action
 
-- PENDING BRIDGE-01 - Owner: Al. After installing 0.1.7, use existing personal Windows settings, enable Bridge display and watch the live preview for 30 seconds. Expected: warp, HEADING and SIM STARDATE remain in a fixed box at the bottom left while the stars move. No account or network is required.
+- PENDING NAV-01 - Owner: Al. After installing 0.1.8, use existing personal Windows settings with Bridge display enabled and Course corrections off. Note HEADING and SIM STARDATE, close the application fully and relaunch. Expected: a random starting heading in 000.0 - 359.9, a stardate around 41xxx during 2026 that has not reset to 60200 and a visible stardate increase after 40 seconds. The box remains stationary. No account or network is required. Random headings can occasionally repeat by chance.
 
 ## Other outstanding checks
+
+- PENDING BRIDGE-01 - Owner: Al. Using 0.1.8, enable Bridge display and watch for 30 seconds. Expected: a fixed bottom-left panel while stars move. This earlier manual check remains pending.
 
 - PENDING FLIGHT-01 - Owner: Al. Using 0.1.7, enable the six visual options, leave Alert sound off and click Preview selected effects. Watch for 20 seconds. Expected: warp engagement, subtle turn and nebula, the stationary bridge panel and an eight-second red border alert, without sound. No account or network is required. This earlier manual check remains pending.
 
@@ -32,4 +35,4 @@ Version 0.1.7 fixes the bridge display at the bottom left and spells out HEADING
 - PENDING DENS-01 - Owner: Al. Using 0.1.6 with 10,000 stars, enable Vary star density and set Cycle length to five minutes. Leave full screen preview untouched for five minutes. Expected: roughly 30% density at two and a half minutes and a return by five minutes, without sudden groups or speed changes. This earlier manual check remains pending.
 - PENDING: audible chime acceptance if Al chooses to enable sound, live combined-effect performance and preview-to-normal transitions on the target display.
 
-The previously recorded Windows installation/embedded preview, mixed-DPI/multi-monitor, resume/sign-in and long-duration hardware checks remain unverified. Preserve the automated passes above when recording manual results. Version 0.1.2 remains the stable release until a later release is explicitly promoted; 0.1.7 is a preview for this change.
+The previously recorded Windows installation/embedded preview, mixed-DPI/multi-monitor, resume/sign-in and long-duration hardware checks remain unverified. Preserve the automated passes above when recording manual results. Version 0.1.2 remains the stable release until a later release is explicitly promoted; 0.1.8 is a preview for this change.
