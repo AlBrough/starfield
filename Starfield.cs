@@ -12,11 +12,24 @@ namespace Brough.Starfield {
 public class Settings {
  public int Stars=10000, Speed=70, Fps=60, StarColour=Color.White.ToArgb(), Background=Color.Black.ToArgb();
  public float Size=1, Stretch=2;
- public bool Motion=true, Shift=false, NaturalColours=true;
+ public bool Motion=true, Shift=false, NaturalColours=true, DensityCycle=true;
+ public int DensityMinutes=12;
  public string Centre="Desktop";
  static string PathName { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Brough","Starfield","settings.xml"); } }
  public static Settings Load() { try { using(var f=File.OpenRead(PathName)) { var s=(Settings)new XmlSerializer(typeof(Settings)).Deserialize(f); s.Stars=Math.Max(100,Math.Min(30000,s.Stars)); s.Speed=Math.Max(1,Math.Min(200,s.Speed)); s.Fps=Math.Max(15,Math.Min(144,s.Fps)); s.Size=Math.Max(.25f,Math.Min(5,s.Size)); s.Stretch=Math.Max(0,Math.Min(10,s.Stretch)); return s; } } catch { return new Settings(); } }
  public void Save() { Directory.CreateDirectory(Path.GetDirectoryName(PathName)); string temp=PathName+".tmp"; using(var f=File.Create(temp)) new XmlSerializer(typeof(Settings)).Serialize(f,this); if(File.Exists(PathName)) File.Replace(temp,PathName,null); else File.Move(temp,PathName); }
+}
+public static class DensityMath {
+ public static double Fraction(double seconds,int minutes,bool enabled) {
+  if(!enabled)return 1;
+  double period=Math.Max(10,Math.Min(15,minutes))*60.0;
+  return .65+.35*Math.Cos(2*Math.PI*(seconds%period)/period);
+ }
+ public static double Opacity(int index,int count,double fraction) {
+  double fade=Math.Max(1,count*.04);
+  double t=Math.Max(0,Math.Min(1,(fraction*(count+fade)-index)/fade));
+  return t*t*(3-2*t);
+ }
 }
 public static class MotionMath {
  // A fixed 1/60 second exposure keeps trail length independent of timer jitter and FPS.
@@ -44,14 +57,17 @@ public class Field : Control {
  protected override void OnHandleCreated(EventArgs e) {base.OnHandleCreated(e);timerResolution=timeBeginPeriod(1)==0;last=0;nextFrame=0;timer.Start();}
  protected override void OnHandleDestroyed(EventArgs e) {timer.Stop();if(timerResolution){timeEndPeriod(1);timerResolution=false;}base.OnHandleDestroyed(e);}
  protected override void Dispose(bool disposing) { if(disposing) timer.Dispose(); base.Dispose(disposing); }
- protected override void OnPaint(PaintEventArgs e) {
-  var o=Options; e.Graphics.Clear(Color.FromArgb(o.Background)); if(Width<2||Height<2)return;
+ protected override void OnPaint(PaintEventArgs e) {RenderFrame(e.Graphics,watch.Elapsed.TotalSeconds);}
+ // Explicit time keeps the real renderer testable across a full density cycle.
+ void RenderFrame(Graphics graphics,double now) {
+  var o=Options; graphics.Clear(Color.FromArgb(o.Background)); if(Width<2||Height<2)return;
   if(stars==null||stars.Length!=o.Stars) { stars=new Star[o.Stars]; for(int i=0;i<stars.Length;i++)stars[i]=NewStar(true); }
-  double now=watch.Elapsed.TotalSeconds,dt=last==0?0:Math.Min(.05,now-last); last=now;
+  double dt=last==0?0:Math.Max(0,Math.Min(.05,now-last)); last=now;
+  double density=DensityMath.Fraction(now,o.DensityMinutes,o.DensityCycle);
   float scale=Math.Max(Width,Height)*.65f,cx=Width*Origin.X,cy=Height*Origin.Y;
   Color colour=Color.FromArgb(o.StarColour);
   if(o.Shift) { double h=now*.15; colour=Color.FromArgb((int)(155+100*Math.Sin(h)),(int)(155+100*Math.Sin(h+2.094)),(int)(155+100*Math.Sin(h+4.188))); }
-  e.Graphics.SmoothingMode=SmoothingMode.AntiAlias; e.Graphics.PixelOffsetMode=PixelOffsetMode.HighQuality;
+  graphics.SmoothingMode=SmoothingMode.AntiAlias; graphics.PixelOffsetMode=PixelOffsetMode.HighQuality;
   using(var pen=new Pen(colour)) using(var brush=new SolidBrush(colour)) {
    pen.StartCap=pen.EndCap=LineCap.Round;
    for(int i=0;i<stars.Length;i++) {
@@ -59,10 +75,13 @@ public class Field : Control {
     if(s.Z<.015f) { s=NewStar(false); }
     float x=cx+s.X/s.Z*scale,y=cy+s.Y/s.Z*scale;
     if(x< -30||x>Width+30||y< -30||y>Height+30) { stars[i]=NewStar(false); continue; }
-    int alpha=(int)(40+215*(1-s.Z)); var c=Color.FromArgb(alpha,o.NaturalColours&&!o.Shift?s.Colour:colour); pen.Color=c; brush.Color=c;
+    stars[i]=s;
+    double visibility=DensityMath.Opacity(i,stars.Length,density);
+    int alpha=(int)((40+215*(1-s.Z))*visibility); if(alpha==0)continue;
+    var c=Color.FromArgb(alpha,o.NaturalColours&&!o.Shift?s.Colour:colour); pen.Color=c; brush.Color=c;
     float size=Math.Max(.6f,o.Size*(.35f+1.8f*(1-s.Z))); pen.Width=size;
-    if(o.Motion&&o.Stretch>0) { float tail=MotionMath.TailDepth(s.Z,o.Speed,o.Stretch); e.Graphics.DrawLine(pen,cx+s.X/tail*scale,cy+s.Y/tail*scale,x,y); }
-    else e.Graphics.FillEllipse(brush,x-size/2,y-size/2,size,size);
+    if(o.Motion&&o.Stretch>0) { float tail=MotionMath.TailDepth(s.Z,o.Speed,o.Stretch); graphics.DrawLine(pen,cx+s.X/tail*scale,cy+s.Y/tail*scale,x,y); }
+    else graphics.FillEllipse(brush,x-size/2,y-size/2,size,size);
     stars[i]=s;
    }
   }
@@ -104,6 +123,8 @@ public class Configuration : Form {
   grid.Dock=DockStyle.Top; grid.AutoSize=true; grid.AutoSizeMode=AutoSizeMode.GrowAndShrink; grid.ColumnCount=1; grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100)); grid.Padding=new Padding(0,0,12,12); scroll.Controls.Add(grid);
   Section("MOTION");
   Number("Number of stars",100,30000,100,settings.Stars,0,delegate(decimal v){settings.Stars=(int)v;});
+  Check("Vary star density",settings.DensityCycle,delegate(bool v){settings.DensityCycle=v;});
+  Number("Cycle length (minutes)",10,15,1,Math.Max(10,Math.Min(15,settings.DensityMinutes)),0,delegate(decimal v){settings.DensityMinutes=(int)v;});
   Number("Speed",1,200,1,settings.Speed,0,delegate(decimal v){settings.Speed=(int)v;});
   Number("Star size",.25m,5,.25m,(decimal)settings.Size,2,delegate(decimal v){settings.Size=(float)v;});
   Check("Motion stretch",settings.Motion,delegate(bool v){settings.Motion=v;});

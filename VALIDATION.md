@@ -19,7 +19,7 @@ Checked 19/10/2026 on Windows x64.
 - An off-screen rendering smoke check with antialiasing produced 20 frames at 1280 x 720 in 497 ms with 10,000 stars. This is not a live frame-pacing measurement. A perfectly smooth 50 or 60 FPS is not established.
 - User reported 30 FPS removed the visible jitter in version 0.1.1 on their display. The new timer pacing and antialiasing still require user confirmation.
 
-## Outstanding before a stable release
+## Outstanding interactive checks
 
 - Interactive testing of every control, save/reload, cancel and full screen preview.
 - Windows Screen Saver Settings installation and embedded preview.
@@ -27,4 +27,13 @@ Checked 19/10/2026 on Windows x64.
 - Keyboard, mouse and system resume behaviour, including Windows sign-in on resume.
 - Long-duration performance and resource usage on target hardware.
 
-This is an initial development version. Compilation and rendering checks do not establish completion of these interactive checks. No stable release has been published.
+Version 0.1.2 was promoted to a stable GitHub release at the owner's explicit request on 19/10/2026. That promotion did not establish completion of these interactive checks.
+
+## Density-cycle update - 02/11/2026
+
+- Full 10-, 12- and 15-minute cycles were checked using a synthetic clock, including endpoints, every whole second, bounds, continuity and repeated periods.
+- Per-star opacity remains bounded and follows the requested density with a gradual fade band. Disabling the cycle returns constant full density.
+- The real renderer was exercised at dense, sparse and returned phases. Image-energy checks confirm thinning and recovery without replacing the star array. Dense and sparse images were visually inspected.
+- Cycle toggle and period controls, XML round-trip and older settings without the new fields pass.
+- Existing behaviour and simulated layout regression checks pass.
+- A real-time 12-minute cycle on the user's display remains pending as DENS-01 in CHECKLIST.md. Automated clock checks do not establish perceived smoothness or long-run reliability on that display.

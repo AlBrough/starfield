@@ -26,11 +26,15 @@ Run `powershell -ExecutionPolicy Bypass -File .\verify-behaviour.ps1` to check m
 
 ## Appearance and motion
 
+**Vary star density** gradually cycles between your selected star count and roughly 30% of it. The default full dense-to-sparse-to-dense cycle is 12 minutes, adjustable from 10 - 15 minutes. It starts dense, reaches its sparsest point halfway through and returns to full density at the end. Stars fade individually and continue moving throughout; the cycle does not recreate the star array or change speed. Disable the option for constant density. Existing settings gain the enabled 12-minute default.
+
 Number fields support direct typing, minus/plus clicks and Up/Down keys. Sliders support dragging and arrow keys. Dropdowns support keyboard selection. Frame-rate options include 30, 50, 60, 90, 120 and 144 FPS; these are target ceilings, not a guarantee of performance or display synchronisation.
 
 Natural star colours use a restrained mix of near-white, blue-white, cream, amber and orange tones. Each star retains its assigned colour until it is recycled. The palette is inspired by [NASA's overview of stellar colour classes](https://science.nasa.gov/exoplanets/stars/), with artistic proportions rather than a scientific population model. Disable Natural star colours for a single chosen colour; selecting a star colour does this automatically. Chromatic shift overrides both while enabled.
 
 Motion trails use a fixed exposure duration instead of the previous frame's duration, so uneven frame times do not make streak lengths pulse. Lines are antialiased and frame requests use a finer timer while the preview or screensaver is open. The renderer is still CPU-based and does not provide VSync. Actual smoothness depends on resolution, star count and the computer. Lower FPS or star counts may help on slower machines.
+
+Run `powershell -ExecutionPolicy Bypass -File .\verify-density.ps1` after building to check complete cycles with a synthetic clock, fade continuity, rendered density changes, controls and XML compatibility. This does not replace the real-time manual test in [CHECKLIST.md](CHECKLIST.md).
 
 ## Licence
 
