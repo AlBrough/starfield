@@ -113,5 +113,6 @@ These are same-machine off-screen measurements, including a canvas clear, from t
 - A stream that deliberately ignores read cancellation is aborted by response disposal at the actual 15-second deadline. Closing/disposal during a UI check, repeated disposal, duplicate-click protection and no automatic check pass.
 - Installed metadata matches AppInfo.cs. New-release links and long error messages are checked through the real Settings controls at independently simulated 100%, 125%, 150% and 200% scales.
 - The compiled checker successfully queried the live unauthenticated API before publication and found 0.1.10 (preview). Publication readback is recorded separately.
+- After publication, GitHub confirmed both 0.1.11 assets uploaded and the compiled checker found 0.1.11 (preview) at its exact release URL. Uploaded ZIP digest matches the local checksum. The packaged binary is built from 7c7fb9a9ea991aa25be006133ed409876240f96e; this later documentation entry does not change it.
 - Existing navigation, nebula, bridge, effects, warp, density, behaviour and layout checks pass. The updated Settings header was rendered and visually inspected.
 - UPD-01 is the next user acceptance check. Existing target-device performance and other manual checks remain pending.

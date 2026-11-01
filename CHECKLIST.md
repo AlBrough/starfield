@@ -27,6 +27,7 @@ Version 0.1.11 adds installed version metadata, a manual GitHub update checker a
 - PASS: compiled Framework update-check fixtures covering numeric/channel selection, safe URLs, pagination, HTTP/JSON/size failures, a real stalled-body timeout, installed metadata and Settings lifecycle/duplicate-click behaviour.
 - PASS: update status links remain visible at independently simulated 100%, 125%, 150% and 200% scales; Settings header visually inspected.
 - PASS: compiled checker reached the unauthenticated live repository API before publication and found 0.1.10 (preview).
+- PASS: after publication, compiled checker found 0.1.11 (preview); GitHub assets uploaded and ZIP checksum verified. UPD-01 on Al's device remains pending.
 
 ## Next action
 
