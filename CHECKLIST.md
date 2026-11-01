@@ -4,7 +4,7 @@ Updated 02/11/2026.
 
 ## Current update
 
-Version 0.1.10 removes the memorial and SIM prefix, retaining only the advancing calculated STARDATE. Nebula clouds use a small opaque cache and native Windows drawing to reduce full-screen transparency cost. The random heading, flight effects, chime, warp and density controls remain available. No cloud services or new dependencies.
+Version 0.1.11 adds installed version metadata, a manual GitHub update checker and an Include previews preference. Newer-release links open in the browser for manual download. No background checks or automatic installation. Existing visual and performance changes remain included. No new third-party dependencies.
 
 ## Recorded passes
 
@@ -24,13 +24,18 @@ Version 0.1.10 removes the memorial and SIM prefix, retaining only the advancing
 - PASS: nebula cache bounds/reuse, refresh, resizing, colour changes, preview time reset, disable state and saved settings containing the removed memorial preference.
 - PASS: same-machine isolated nebula benchmark improved from 39.818 to 7.585 ms/frame at Full HD and 159.215 to 41.560 ms/frame at 4K; not a whole-app or target-device FPS claim.
 - PASS: visual comparison of cloud rendering and inspection of the cleaned STARDATE readout.
+- PASS: compiled Framework update-check fixtures covering numeric/channel selection, safe URLs, pagination, HTTP/JSON/size failures, a real stalled-body timeout, installed metadata and Settings lifecycle/duplicate-click behaviour.
+- PASS: update status links remain visible at independently simulated 100%, 125%, 150% and 200% scales; Settings header visually inspected.
+- PASS: compiled checker reached the unauthenticated live repository API before publication and found 0.1.10 (preview).
 
 ## Next action
 
-- PENDING PERF-01 - Owner: Al. After installing 0.1.10, use the same personal Windows star count, warp and FPS settings that showed the slowdown. Enable Nebula passages and Bridge display, leave sound off and run Full screen preview for two minutes. Expected: STARDATE without SIM or a memorial, and less slowdown when the nebula fades in after 90 seconds. Report whether the cloud passage is smooth enough on the device. No account or network is required.
+- PENDING UPD-01 - Owner: Al. After manually installing 0.1.11 once, open Settings with the existing personal preferences. Confirm Version 0.1.11 (preview), leave Include previews selected and click Check for updates. Expected within 15 seconds: No newer release found while 0.1.11 is the newest release, or a link if a later one exists. Settings should stay responsive. Requires internet access, no GitHub login or timed wait beyond the request.
 - WITHDRAWN MEM-01 - Memorial removed by user request on 02/11/2026. No further test is required for that feature.
 
 ## Other outstanding checks
+
+- PENDING PERF-01 - Owner: Al. Using 0.1.11, keep the star count, warp and FPS settings that showed slowdown. Enable Nebula passages and Bridge display, leave sound off and run Full screen preview for two minutes. Expected: less slowdown when clouds appear after 90 seconds. This earlier device check remains pending.
 
 - PENDING NAV-01 - Owner: Al. Using 0.1.9 with Bridge display enabled and Course corrections off, note the heading and date, close the application fully and relaunch. Expected: a random heading, a clock-driven 41xxx stardate during 2026 and a visible date increase after 40 seconds. Random headings may repeat by chance. This earlier manual check remains pending.
 
@@ -42,4 +47,4 @@ Version 0.1.10 removes the memorial and SIM prefix, retaining only the advancing
 - PENDING DENS-01 - Owner: Al. Using 0.1.6 with 10,000 stars, enable Vary star density and set Cycle length to five minutes. Leave full screen preview untouched for five minutes. Expected: roughly 30% density at two and a half minutes and a return by five minutes, without sudden groups or speed changes. This earlier manual check remains pending.
 - PENDING: audible chime acceptance if Al chooses to enable sound, live combined-effect performance and preview-to-normal transitions on the target display.
 
-The previously recorded Windows installation/embedded preview, mixed-DPI/multi-monitor, resume/sign-in and long-duration hardware checks remain unverified. Preserve the automated passes above when recording manual results. Version 0.1.2 remains the stable release until a later release is explicitly promoted; 0.1.10 is a preview for this change.
+The previously recorded Windows installation/embedded preview, mixed-DPI/multi-monitor, resume/sign-in and long-duration hardware checks remain unverified. Preserve the automated passes above when recording manual results. Version 0.1.2 remains the stable release until a later release is explicitly promoted; 0.1.11 is a preview for this change.

@@ -14,6 +14,18 @@ Launching without arguments opens settings. Windows may pass `/s` when double-cl
 
 The FPS setting is a target ceiling. Actual rendering speed depends on the computer and star count. This version uses Windows GDI+ software rendering. It does not provide a security lock; Windows manages sign-in on resume.
 
+## Updates
+
+Settings shows the installed version beside **Check for updates**. Click it to check published releases in [AlBrough/starfield](https://github.com/AlBrough/starfield/releases). No check runs at startup, during the screensaver or in the background. The request uses the public GitHub API without credentials and does not upload your settings.
+
+**Include previews** controls whether prereleases are considered. It defaults on in preview builds and is saved with your settings. Clear it to check stable releases only. Version comparison is numeric, so 0.1.10 is newer than 0.1.9; GitHub's prerelease flag and semantic-version prerelease suffixes are both respected. A preview does not suggest reinstalling itself, and an older stable release does not appear as an upgrade.
+
+When a newer release is found, **View releases** opens that release in your browser. Download its ZIP, close Starfield and replace the old file manually. The checker does not download, install, overwrite files or change Windows screensaver settings. Network errors, rate limits and incomplete responses produce an error message instead of claiming you are up to date. Closing Settings cancels a pending check. Requests have a 15-second deadline, bounded response size and pagination; no redirect or third-party download address is followed by the checker.
+
+Version metadata is defined in `AppInfo.cs` and embedded in the executable. Update it for each new build. Publishing an existing preview as stable can be reported as a stable promotion at the same version.
+
+Run `verify-updates.ps1` after building for version/channel selection, API fixtures, pagination, size/error bounds, a real 15-second stalled-body timeout, installed metadata and Settings interaction checks. It uses synthetic responses and temporary windows. Run `verify-updates.ps1 -Live` for an explicit network check against the real public repository. GitHub's [release API](https://docs.github.com/en/rest/releases/releases#list-releases) and [rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api) describe the service contract.
+
 ## Validation status
 
 Build validation is recorded separately from interactive testing. Windows preview embedding, multi-monitor layout, resume behaviour and performance require testing on the target computer before release.

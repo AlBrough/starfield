@@ -103,3 +103,15 @@ These are same-machine off-screen measurements, including a canvas clear, from t
 - Navigation, bridge bounds, independent effects, warp, density, existing behaviour and simulated layout checks pass.
 - Before/after cloud images and the combined scene were visually inspected; the readout no longer includes SIM or memorial text.
 - PERF-01 in CHECKLIST.md remains the next device acceptance check.
+
+## Manual GitHub update checker - 02/11/2026
+
+- Version 0.1.11 embeds installed assembly/file/informational version metadata and adds an always-visible manual update check with an Include previews preference.
+- Checks use the public repository API without authentication. They do not run automatically or install anything. Release links are constructed only from strictly validated version tags on the fixed repository URL.
+- Compiled .NET Framework checks pass for numeric and prerelease ordering, GitHub's plain-tag preview flags, same-version stable promotion, draft exclusion, unsafe tags (including trailing newline), full pagination and explicit incomplete-history failure.
+- HTTP error/rate-limit/redirect, malformed/incomplete JSON, null listing and both declared and unknown-length oversized-response checks pass.
+- A stream that deliberately ignores read cancellation is aborted by response disposal at the actual 15-second deadline. Closing/disposal during a UI check, repeated disposal, duplicate-click protection and no automatic check pass.
+- Installed metadata matches AppInfo.cs. New-release links and long error messages are checked through the real Settings controls at independently simulated 100%, 125%, 150% and 200% scales.
+- The compiled checker successfully queried the live unauthenticated API before publication and found 0.1.10 (preview). Publication readback is recorded separately.
+- Existing navigation, nebula, bridge, effects, warp, density, behaviour and layout checks pass. The updated Settings header was rendered and visually inspected.
+- UPD-01 is the next user acceptance check. Existing target-device performance and other manual checks remain pending.

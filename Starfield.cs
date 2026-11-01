@@ -7,6 +7,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
+using Timer=System.Windows.Forms.Timer;
 
 namespace Brough.Starfield {
 public class Settings {
@@ -14,6 +17,7 @@ public class Settings {
  public float Size=1, Stretch=2;
  public bool Motion=true, Shift=false, NaturalColours=true, DensityCycle=true;
  public int DensityMinutes=12;
+ public bool IncludePreviewUpdates=AppInfo.IsPreview;
  public bool Engagement, CruiseVariation, CourseCorrections, NebulaPassages, BridgeDisplay, RedAlert, AlertSound;
  float warpFactor=-1;
  public float WarpFactor {get{return warpFactor<1?WarpMath.FromLegacySpeed(Speed):warpFactor;}set{warpFactor=WarpMath.Clamp(value);}}
@@ -136,17 +140,29 @@ public class Saver : Form {
 }
 public class Configuration : Form {
  readonly Settings settings; readonly Field preview; readonly TableLayoutPanel grid=new TableLayoutPanel(); int row;
+ readonly Button checkUpdates; readonly CheckBox includePreviews; readonly LinkLabel updateStatus;
+ readonly CancellationTokenSource updateLifetime=new CancellationTokenSource();
+ readonly Func<bool,CancellationToken,Task<UpdateRelease>> updateLookup;
+ bool updateDisposed;
  readonly Color muted=Color.FromArgb(155,168,187), ink=Color.FromArgb(230,236,245), surface=Color.FromArgb(24,30,41);
- public Configuration(Settings options) {
+ public Configuration(Settings options):this(options,UpdateChecker.CheckAsync){}
+ public Configuration(Settings options,Func<bool,CancellationToken,Task<UpdateRelease>> lookup) {
+  updateLookup=lookup;
   SuspendLayout(); settings=options; Text="Starfield - Settings"; AutoScaleDimensions=new SizeF(96,96); AutoScaleMode=AutoScaleMode.Dpi; Font=new Font("Segoe UI",10);
   BackColor=Color.FromArgb(15,19,27); ForeColor=ink; ClientSize=new Size(1080,720); MinimumSize=new Size(900,680); StartPosition=FormStartPosition.CenterScreen;
   var layout=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,Margin=Padding.Empty,Padding=Padding.Empty};
   layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,400)); layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100)); layout.RowStyles.Add(new RowStyle(SizeType.Percent,100)); Controls.Add(layout);
   var sidebar=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=3,BackColor=surface,Margin=Padding.Empty,Padding=new Padding(24,20,24,16)};
-  sidebar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100)); sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute,80)); sidebar.RowStyles.Add(new RowStyle(SizeType.Percent,100)); sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute,62)); layout.Controls.Add(sidebar,0,0);
+  sidebar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100)); sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute,188)); sidebar.RowStyles.Add(new RowStyle(SizeType.Percent,100)); sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute,62)); layout.Controls.Add(sidebar,0,0);
   var header=new Panel {Dock=DockStyle.Fill,Margin=Padding.Empty};
   header.Controls.Add(new Label {Text="STARFIELD",Font=new Font("Segoe UI",21,FontStyle.Bold),AutoSize=true,Location=new Point(0,0)});
-  header.Controls.Add(new Label {Text="Make space your own.",ForeColor=muted,AutoSize=true,Location=new Point(2,43)}); sidebar.Controls.Add(header,0,0);
+  header.Controls.Add(new Label {Text="Version "+AppInfo.DisplayVersion,ForeColor=muted,AutoSize=true,Location=new Point(2,43)});
+  checkUpdates=Button("Check for updates");checkUpdates.Name="CheckUpdates";checkUpdates.Dock=DockStyle.None;checkUpdates.SetBounds(0,70,166,32);checkUpdates.Click+=CheckForUpdates;header.Controls.Add(checkUpdates);
+  includePreviews=new CheckBox {Text="Include previews",Name="IncludePreviewUpdates",Checked=settings.IncludePreviewUpdates,AutoSize=true,Font=new Font("Segoe UI",9),Location=new Point(178,77)};includePreviews.CheckedChanged+=delegate {settings.IncludePreviewUpdates=includePreviews.Checked;updateStatus.Links.Clear();updateStatus.Text="Press Check for updates to check this selection.";};header.Controls.Add(includePreviews);
+  updateStatus=new LinkLabel {Name="UpdateStatus",Text="Checks GitHub when you click the button.",LinkColor=Theme.Accent,ActiveLinkColor=ink,VisitedLinkColor=Theme.Accent,Location=new Point(0,111),Size=new Size(328,68),LinkArea=new LinkArea(0,0)};
+  updateStatus.LinkClicked+=delegate(object sender,LinkLabelLinkClickedEventArgs e){string url=e.Link.LinkData as string;if(url==null)return;try{Process.Start(new ProcessStartInfo(url){UseShellExecute=true});}catch(Exception){SetUpdateStatus("Couldn't open your browser.",UpdateChecker.ReleasesUrl);}};header.Controls.Add(updateStatus);
+  FormClosed+=delegate {if(!updateDisposed)updateLifetime.Cancel();};
+  sidebar.Controls.Add(header,0,0);
   var scroll=new Panel {Dock=DockStyle.Fill,AutoScroll=true,Margin=Padding.Empty}; sidebar.Controls.Add(scroll,0,1);
   grid.Dock=DockStyle.Top; grid.AutoSize=true; grid.AutoSizeMode=AutoSizeMode.GrowAndShrink; grid.ColumnCount=1; grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100)); grid.Padding=new Padding(0,0,12,12); scroll.Controls.Add(grid);
   Section("MOTION");
@@ -188,6 +204,21 @@ public class Configuration : Form {
   var full=Button("Full screen preview"); full.Click+=delegate {using(var f=new Form {FormBorderStyle=FormBorderStyle.None,Bounds=Screen.FromControl(this).Bounds,StartPosition=FormStartPosition.Manual,KeyPreview=true}) {f.Controls.Add(new Field(settings)); f.KeyDown+=delegate {f.Close();}; f.Controls[0].MouseDown+=delegate {f.Close();}; f.ShowDialog(this);} }; footer.Controls.Add(full,1,0);right.Controls.Add(footer,0,2);
   ResumeLayout(true);
  }
+ protected override void Dispose(bool disposing){if(disposing&&!updateDisposed){updateDisposed=true;updateLifetime.Cancel();updateLifetime.Dispose();}base.Dispose(disposing);}
+ async void CheckForUpdates(object sender,EventArgs e){
+  if(!checkUpdates.Enabled)return;checkUpdates.Enabled=false;includePreviews.Enabled=false;updateStatus.Links.Clear();updateStatus.Text="Checking GitHub...";
+  try{
+   bool previews=includePreviews.Checked;var release=await updateLookup(previews,updateLifetime.Token);
+   if(IsDisposed||Disposing||updateLifetime.IsCancellationRequested)return;
+   if(release==null)SetUpdateStatus("No supported releases found.",UpdateChecker.ReleasesUrl);
+   else if(release.IsNewerThan(ReleaseVersion.Parse(AppInfo.Version),AppInfo.IsPreview))SetUpdateStatus(release.DisplayVersion+" is available.",release.Url);
+   else SetUpdateStatus(previews?"No newer release found.":"No newer stable release found.",UpdateChecker.ReleasesUrl);
+  }catch(OperationCanceledException){if(!IsDisposed&&!Disposing&&!updateLifetime.IsCancellationRequested)SetUpdateStatus("The update check timed out. Please try again.",UpdateChecker.ReleasesUrl);}
+  catch(UpdateCheckException error){if(!IsDisposed&&!Disposing)SetUpdateStatus(error.Message,UpdateChecker.ReleasesUrl);}
+  catch(Exception){if(!IsDisposed&&!Disposing)SetUpdateStatus("Couldn't reach GitHub. Please try again.",UpdateChecker.ReleasesUrl);}
+  finally{if(!IsDisposed&&!Disposing){checkUpdates.Enabled=true;includePreviews.Enabled=true;}}
+ }
+ void SetUpdateStatus(string message,string url){updateStatus.Text=message+" View releases.";updateStatus.Links.Clear();updateStatus.Links.Add(message.Length+1,14,url);}
  Button Button(string text) {return new Button {Text=text,Dock=DockStyle.Fill,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(40,49,65),ForeColor=ink,Margin=new Padding(0,0,8,0),Cursor=Cursors.Hand};}
  ChoiceInput Combo() {return new ChoiceInput {Dock=DockStyle.Fill,BackColor=surface,ForeColor=ink};}
  void Add(Control control) {grid.RowCount=row+1;grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));control.Margin=new Padding(0,0,0,10);grid.Controls.Add(control,0,row++);}
