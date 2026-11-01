@@ -14,6 +14,7 @@ public class Settings {
  public float Size=1, Stretch=2;
  public bool Motion=true, Shift=false, NaturalColours=true, DensityCycle=true;
  public int DensityMinutes=12;
+ public bool Engagement, CruiseVariation, CourseCorrections, NebulaPassages, BridgeDisplay, RedAlert, AlertSound;
  float warpFactor=-1;
  public float WarpFactor {get{return warpFactor<1?WarpMath.FromLegacySpeed(Speed):warpFactor;}set{warpFactor=WarpMath.Clamp(value);}}
  public string Centre="Desktop";
@@ -68,11 +69,14 @@ public class Field : Control {
  [DllImport("winmm.dll")] static extern uint timeBeginPeriod(uint period);
  [DllImport("winmm.dll")] static extern uint timeEndPeriod(uint period);
  public Settings Options; public PointF Origin=new PointF(.5f,.5f);
+ readonly FlightPainter flightPainter=new FlightPainter();
+ double demoStart=-1000,engagementStart; float previousWarp; bool previousEngagement;
+ public void PreviewEffects(){demoStart=watch.Elapsed.TotalSeconds;engagementStart=demoStart;Invalidate();}
  public Field(Settings options) { Options=options; SetStyle(ControlStyles.AllPaintingInWmPaint|ControlStyles.UserPaint|ControlStyles.OptimizedDoubleBuffer|ControlStyles.ResizeRedraw,true); Dock=DockStyle.Fill; timer.Tick+=delegate { double now=watch.Elapsed.TotalSeconds; if(now>=nextFrame) {nextFrame=now+1.0/Options.Fps; Invalidate();} }; timer.Interval=1; }
  Star NewStar(bool anywhere) { return new Star {X=(float)(random.NextDouble()*2-1),Y=(float)(random.NextDouble()*2-1),Z=anywhere?(float)(.02+random.NextDouble()*.98):1,Colour=StarPalette.Sample(random.NextDouble())}; }
  protected override void OnHandleCreated(EventArgs e) {base.OnHandleCreated(e);timerResolution=timeBeginPeriod(1)==0;last=0;nextFrame=0;timer.Start();}
  protected override void OnHandleDestroyed(EventArgs e) {timer.Stop();if(timerResolution){timeEndPeriod(1);timerResolution=false;}base.OnHandleDestroyed(e);}
- protected override void Dispose(bool disposing) { if(disposing) timer.Dispose(); base.Dispose(disposing); }
+ protected override void Dispose(bool disposing) { if(disposing){timer.Dispose();flightPainter.Dispose();} base.Dispose(disposing); }
  protected override void OnPaint(PaintEventArgs e) {RenderFrame(e.Graphics,watch.Elapsed.TotalSeconds);}
  // Explicit time keeps the real renderer testable across a full density cycle.
  void RenderFrame(Graphics graphics,double now) {
@@ -80,8 +84,13 @@ public class Field : Control {
   if(stars==null||stars.Length!=o.Stars) { stars=new Star[o.Stars]; for(int i=0;i<stars.Length;i++)stars[i]=NewStar(true); }
   double dt=last==0?0:Math.Max(0,Math.Min(.05,now-last)); last=now;
   double density=DensityMath.Fraction(now,o.DensityMinutes,o.DensityCycle);
-  double speed=WarpMath.VisualSpeed(o.WarpFactor);
-  float scale=Math.Max(Width,Height)*.65f,cx=Width*Origin.X,cy=Height*Origin.Y;
+  if((o.Engagement&&!previousEngagement)||o.WarpFactor>previousWarp+.001f)engagementStart=now;
+  previousEngagement=o.Engagement;previousWarp=o.WarpFactor;
+  bool demo=now>=demoStart&&now<demoStart+20;
+  var flight=FlightMath.Sample(o,demo?now-demoStart:now,now-engagementStart,demo);
+  double speed=WarpMath.VisualSpeed(flight.Warp);
+  float scale=Math.Max(Width,Height)*.65f,cx=Width*(Origin.X+flight.OffsetX),cy=Height*(Origin.Y+flight.OffsetY);
+  flightPainter.Background(graphics,ClientSize,flight,now);
   Color colour=Color.FromArgb(o.StarColour);
   if(o.Shift) { double h=now*.15; colour=Color.FromArgb((int)(155+100*Math.Sin(h)),(int)(155+100*Math.Sin(h+2.094)),(int)(155+100*Math.Sin(h+4.188))); }
   graphics.SmoothingMode=SmoothingMode.AntiAlias; graphics.PixelOffsetMode=PixelOffsetMode.HighQuality;
@@ -97,11 +106,12 @@ public class Field : Control {
     int alpha=(int)((40+215*(1-s.Z))*visibility); if(alpha==0)continue;
     var c=Color.FromArgb(alpha,o.NaturalColours&&!o.Shift?s.Colour:colour); pen.Color=c; brush.Color=c;
     float size=Math.Max(.6f,o.Size*(.35f+1.8f*(1-s.Z))); pen.Width=size;
-    if(o.Motion&&o.Stretch>0) { float tail=MotionMath.TailDepth(s.Z,speed,o.Stretch); graphics.DrawLine(pen,cx+s.X/tail*scale,cy+s.Y/tail*scale,x,y); }
+    if((o.Motion&&o.Stretch>0)||flight.ExtraStretch>0) { float tail=MotionMath.TailDepth(s.Z,speed,(o.Motion?o.Stretch:0)+flight.ExtraStretch); graphics.DrawLine(pen,cx+s.X/tail*scale,cy+s.Y/tail*scale,x,y); }
     else graphics.FillEllipse(brush,x-size/2,y-size/2,size,size);
     stars[i]=s;
    }
   }
+  flightPainter.Foreground(graphics,ClientSize,o,flight,now);
  }
 }
 public class Saver : Form {
@@ -154,6 +164,18 @@ public class Configuration : Form {
   Section("DISPLAY");
   var fps=Combo(); foreach(int n in new[]{30,50,60,90,120,144})fps.Items.Add(n); if(!fps.Items.Contains(settings.Fps))fps.Items.Add(settings.Fps); fps.SelectedItem=settings.Fps; fps.SelectedIndexChanged+=delegate {settings.Fps=(int)fps.SelectedItem;}; AddLabel("FPS limit",fps);
   var centre=Combo(); centre.Items.AddRange(new object[]{"Desktop","Each monitor","Mouse position"}); centre.SelectedItem=settings.Centre; if(centre.SelectedIndex<0)centre.SelectedIndex=0; centre.SelectedIndexChanged+=delegate {settings.Centre=centre.Text;}; AddLabel("Centred on",centre);
+  Section("FLIGHT EFFECTS");
+  Check("Warp engagement",settings.Engagement,delegate(bool v){settings.Engagement=v;});
+  Check("Vary cruising speed",settings.CruiseVariation,delegate(bool v){settings.CruiseVariation=v;});
+  Check("Course corrections",settings.CourseCorrections,delegate(bool v){settings.CourseCorrections=v;});
+  Check("Nebula passages",settings.NebulaPassages,delegate(bool v){settings.NebulaPassages=v;});
+  Check("Bridge display",settings.BridgeDisplay,delegate(bool v){settings.BridgeDisplay=v;});
+  Check("Red alert",settings.RedAlert,delegate(bool v){settings.RedAlert=v;});
+  var alertSound=Check("Alert sound (optional)",settings.AlertSound,delegate(bool v){settings.AlertSound=v;});
+  alertSound.Enabled=settings.RedAlert;
+  foreach(Control control in grid.Controls){var box=control as CheckBox;if(box!=null&&box.Text=="Red alert")box.CheckedChanged+=delegate {alertSound.Enabled=settings.RedAlert;};}
+  var effectsDemo=Button("Preview selected effects");effectsDemo.Height=36;effectsDemo.MinimumSize=new Size(0,36);effectsDemo.Click+=delegate {preview.PreviewEffects();};Add(effectsDemo);
+  Add(new Label {Text="Preview brings selected events forward for 20 seconds.",ForeColor=muted,AutoSize=true});
   var buttons=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,Margin=new Padding(0,14,0,0)}; buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,50));buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,50));
   var save=Button("Save settings"); save.BackColor=Color.FromArgb(63,115,222); save.Click+=delegate {try {settings.Save(); Close();} catch(Exception ex){MessageBox.Show(this,"Could not save settings: "+ex.Message);} }; buttons.Controls.Add(save,0,0);
   var cancel=Button("Cancel"); cancel.Click+=delegate {Close();}; buttons.Controls.Add(cancel,1,0); sidebar.Controls.Add(buttons,0,2); AcceptButton=save; CancelButton=cancel;

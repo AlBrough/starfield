@@ -52,3 +52,13 @@ Version 0.1.2 was promoted to a stable GitHub release at the owner's explicit re
 - Real-renderer star-depth changes match the selected warp factor at 1, 9 and 9.99 with the legacy Speed field unchanged.
 - Existing behaviour, density and layout checks pass. The settings window was rendered and visually inspected.
 - WARP-01 remains a manual acceptance check in CHECKLIST.md. Smoothness at high warp on the user's display is not established by these automated results.
+
+## Optional flight effects - 02/11/2026
+
+- Version 0.1.6 adds six independent visual effects, a separate opt-in alert chime and a 20-second preview of selected events. All new options default off.
+- Automated checks pass for each effect's sample timing, bounds over ten minutes of synthetic time and unchanged flight state when disabled.
+- Actual-renderer checks exercise each visual option independently and all together. Combined, nebula-only and red-alert images were visually inspected.
+- Checkbox bindings, preview-button wiring, XML round-trip and old settings with all new effects disabled pass.
+- The original chime's WAV structure and SoundPlayer loading pass without playing audio. Audible output, volume and device behaviour remain unverified.
+- The previous warp, density, behaviour and simulated layout checks pass.
+- Real-time perception, combined-effect performance at target resolution, preview-to-normal transitions and audible chime acceptance remain manual checks. FLIGHT-01 in CHECKLIST.md is the next user action.

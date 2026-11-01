@@ -38,6 +38,24 @@ Motion trails use a fixed exposure duration instead of the previous frame's dura
 
 Run `powershell -ExecutionPolicy Bypass -File .\verify-density.ps1` after building to check complete cycles with a synthetic clock, fade continuity, rendered density changes, controls and XML compatibility. This does not replace the real-time manual test in [CHECKLIST.md](CHECKLIST.md).
 
+## Flight effects
+
+All flight effects are separate opt-in settings under **FLIGHT EFFECTS**. They default off, including when loading settings from an older version.
+
+| Option | Behaviour |
+| --- | --- |
+| Warp engagement | Ramps up for three seconds and briefly stretches stars at startup, when enabled or when you increase the chosen warp factor. Settles over seven seconds. |
+| Vary cruising speed | Smooth three-minute speed variation, independent of density. The selected warp factor is the normal cruising ceiling. |
+| Course corrections | Gentle 30-second shifts in the vanishing point, starting after 35 seconds and repeating every 100 seconds. |
+| Nebula passages | Faint procedural clouds for 70 seconds, starting after 90 seconds and repeating every seven minutes. |
+| Bridge display | A moving, translucent warp/heading readout with an explicitly fictional SIM STARDATE. The movement avoids a permanently fixed panel but is not a burn-in guarantee. |
+| Red alert | An eight-second slow red border pulse with a bounded acceleration, starting after two minutes and repeating every five minutes. No rapid flashes. |
+| Alert sound | Independently opt-in original synthesised chime, once per alert. Requires Red alert. Off by default. |
+
+Click **Preview selected effects** to bring the selected timed events forward into a 20-second live preview. It does not turn on unselected effects. The separate **Full screen preview** starts a normal flight session. The renderer does not exceed Warp 9.99. The effects are original procedural artwork and sound, without official Star Trek media or fonts.
+
+Run `verify-effects.ps1` after building for independent effect checks, bounded combinations, actual rendering, settings compatibility, preview wiring and sound-file format validation. It does not play the chime; audible acceptance is a manual check.
+
 ## Licence
 
 Copyright (c) 2026 Al Brough. Licensed under the [MIT licence](LICENSE), allowing personal and commercial use, modification and redistribution with the licence notice preserved. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependency and reference-image boundaries. Include both files when sharing the built application.
