@@ -48,7 +48,7 @@ All flight effects are separate opt-in settings under **FLIGHT EFFECTS**. They d
 | Vary cruising speed | Smooth three-minute speed variation, independent of density. The selected warp factor is the normal cruising ceiling. |
 | Course corrections | Gentle 30-second shifts in the vanishing point, starting after 35 seconds and repeating every 100 seconds. |
 | Nebula passages | Faint procedural clouds for 70 seconds, starting after 90 seconds and repeating every seven minutes. |
-| Bridge display | A stationary translucent panel in the bottom-left corner, showing warp factor, HEADING (simulated direction of travel) and an approximate TNG-era SIM STARDATE. Its size stays fixed when alert text appears. |
+| Bridge display | A stationary translucent panel in the bottom-left corner, showing warp factor, HEADING (simulated direction of travel) and an approximate TNG-era STARDATE. Its size stays fixed when alert text appears. |
 | Red alert | An eight-second slow red border pulse with a bounded acceleration, starting after two minutes and repeating every five minutes. No rapid flashes. |
 | Alert sound | Independently opt-in original synthesised chime, once per alert. Requires Red alert. Off by default. |
 
@@ -64,9 +64,9 @@ The stardate uses the computer's local date and time, independent of the preview
 
 Run `verify-navigation.ps1` to check heading randomness/ranges, compass wrapping, calendar anchors, visible clock ticks, year rollover and leap-day progression.
 
-**Remember Sir Patrick Stewart** is an optional dedication beneath the bridge readout. Enable Bridge display first, then enable the remembrance option. It shows his name, 28/10/2026 and the date's simulated TNG-era stardate, 41821.918. The fixed value is calculated at the start of that calendar date, not a claimed time of his passing. The separate live stardate continues to advance. The option defaults off and is saved with other preferences.
+The bridge readout uses **STARDATE** without a SIM prefix. It shows only the advancing calculated date, with no memorial or fixed remembrance date. Old saved memorial preferences are ignored without discarding other settings.
 
-The date follows the user's requested remembrance and reporting of his death on 28 October, including [the Associated Press obituary](https://apnews.com/article/8b38054ff74d4187a32158d78e345ad7). [StarTrek.com's tribute](https://www.startrek.com/en-un/news/in-memory-of-sir-patrick-stewart-1940-2026) provides further context. The app includes original dedication text only, without photographs or copied tribute text. Run `verify-tribute.ps1` to check the fixed date conversion, optional control, settings compatibility and rendering.
+Nebula translucency is now composed on a bounded low-resolution cache at up to 12 updates per second, then copied opaquely to the display using native Windows drawing. Stars and the readout still update at the selected FPS. The slow-moving clouds retain their existing passage timing. Run `verify-nebula.ps1` to check cache reuse, resizing, colour changes, disabled state and old-settings compatibility. Run `measure-nebula.ps1 -Label current` to measure isolated Full HD and 4K background rendering; results are not whole-app FPS or a guarantee for another computer.
 
 ## Licence
 

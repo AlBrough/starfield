@@ -85,3 +85,21 @@ Version 0.1.2 was promoted to a stable GitHub release at the owner's explicit re
 - Tests pass for date conversion, bridge-display dependency, checkbox binding, XML persistence, older settings opting out and actual rendering. The rendered dedication was visually inspected.
 - Existing navigation, bridge bounds, effects, warp, density, behaviour and simulated layout checks pass.
 - MEM-01 in CHECKLIST.md is the next manual acceptance check. Earlier recorded passes and pending checks remain preserved.
+
+## Stardate cleanup and nebula performance - 02/11/2026
+
+- Version 0.1.10 removes the memorial text, setting and UI control at the user's request. The obsolete MEM-01 test is withdrawn. Older XML with PatrickTribute still loads the other settings correctly.
+- The live readout now says STARDATE, retaining the existing calculated calendar and stationary panel.
+- An isolated benchmark reproduced expensive full-screen GDI+ colour-matrix/transparency work. A small opaque cache with native Windows stretching reduces that work. Cloud compositing is capped at 12 Hz; stars retain their configured render timing.
+
+| Isolated background, median ms/frame | Before (0.1.9) | After (0.1.10) |
+| --- | --- | --- |
+| 1920 x 1080 | 39.818 | 7.585 |
+| 3840 x 2160 | 159.215 | 41.560 |
+
+These are same-machine off-screen measurements, including a canvas clear, from three warm 30-frame passes after warm-up. They isolate the background and do not establish whole-app FPS or the result on Al's device. measure-nebula.ps1 is the reproducible harness. Initial cache generation and hardware-specific behaviour are not established by these medians.
+
+- Cache size/reuse, periodic refresh, viewport resizing, custom background colour, preview time reset, disable state and removed-setting compatibility checks pass.
+- Navigation, bridge bounds, independent effects, warp, density, existing behaviour and simulated layout checks pass.
+- Before/after cloud images and the combined scene were visually inspected; the readout no longer includes SIM or memorial text.
+- PERF-01 in CHECKLIST.md remains the next device acceptance check.

@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Media;
 using System.Security.Cryptography;
+using System.Runtime.InteropServices;
 
 namespace Brough.Starfield {
 public static class NavigationMath {
@@ -39,8 +40,15 @@ public static class FlightMath {
 }
 sealed class FlightPainter : IDisposable {
  Bitmap nebula; Font bridgeFont; float fontSize; SoundPlayer chime; MemoryStream wave; bool sounded;
+ Bitmap nebulaCache; double cachedAt=double.NegativeInfinity; float cachedOpacity; int cachedColour;
+ byte[] nebulaPixels;
+ [StructLayout(LayoutKind.Sequential)] struct BitmapHeader {public uint Size;public int Width,Height;public ushort Planes,Bits;public uint Compression,ImageSize;public int XPels,YPels;public uint Used,Important;}
+ [DllImport("gdi32.dll")] static extern int StretchDIBits(IntPtr dc,int x,int y,int width,int height,int sourceX,int sourceY,int sourceWidth,int sourceHeight,byte[] pixels,ref BitmapHeader header,uint usage,uint operation);
+ [DllImport("gdi32.dll")] static extern int SetStretchBltMode(IntPtr dc,int mode);
+ [DllImport("gdi32.dll")] static extern bool SetBrushOrgEx(IntPtr dc,int x,int y,IntPtr previous);
+ public Color BackgroundColour=Color.Black;
  void CreateNebula(){
-  if(nebula!=null)return;nebula=new Bitmap(256,144);
+  if(nebula!=null)return;nebula=new Bitmap(256,144,PixelFormat.Format32bppPArgb);
   for(int y=0;y<144;y++)for(int x=0;x<256;x++){
    double nx=x/255.0,ny=y/143.0;
    double clouds=Math.Exp(-((nx-.3)*(nx-.3)*15+(ny-.5)*(ny-.5)*8))+.8*Math.Exp(-((nx-.72)*(nx-.72)*25+(ny-.35)*(ny-.35)*12));
@@ -50,13 +58,28 @@ sealed class FlightPainter : IDisposable {
   }
  }
  public void Background(Graphics g,Size size,FlightFrame frame,double time){
-  if(frame.Nebula<=.001)return;CreateNebula();
-  using(var attributes=new ImageAttributes()){
-   var matrix=new ColorMatrix();matrix.Matrix33=frame.Nebula;attributes.SetColorMatrix(matrix);
-   int width=(int)(size.Width*1.45),height=(int)(size.Height*1.4);
-   var target=new Rectangle((int)(-size.Width*.25+Math.Sin(time*.009)*size.Width*.10),(int)(-size.Height*.2+Math.Cos(time*.007)*size.Height*.05),width,height);
-   g.DrawImage(nebula,target,0,0,nebula.Width,nebula.Height,GraphicsUnit.Pixel,attributes);
+  if(frame.Nebula<=.001||size.Width<1||size.Height<1)return;CreateNebula();
+  // Composite translucency on a small opaque surface, not millions of screen pixels.
+  double scale=Math.Min(1,640.0/Math.Max(size.Width,size.Height));
+  var cacheSize=new Size(Math.Max(1,(int)(size.Width*scale)),Math.Max(1,(int)(size.Height*scale)));
+  if(nebulaCache==null||nebulaCache.Size!=cacheSize){if(nebulaCache!=null)nebulaCache.Dispose();nebulaCache=new Bitmap(cacheSize.Width,cacheSize.Height,PixelFormat.Format32bppPArgb);cachedAt=double.NegativeInfinity;}
+  if(time<cachedAt||time-cachedAt>=1.0/12||cachedColour!=BackgroundColour.ToArgb()||Math.Abs(cachedOpacity-frame.Nebula)>.05){
+   using(var layer=Graphics.FromImage(nebulaCache))using(var attributes=new ImageAttributes()){
+    layer.Clear(BackgroundColour);layer.InterpolationMode=InterpolationMode.Bilinear;
+    var matrix=new ColorMatrix();matrix.Matrix33=frame.Nebula;attributes.SetColorMatrix(matrix);
+    int width=(int)(cacheSize.Width*1.45),height=(int)(cacheSize.Height*1.4);
+    var target=new Rectangle((int)(-cacheSize.Width*.25+Math.Sin(time*.009)*cacheSize.Width*.10),(int)(-cacheSize.Height*.2+Math.Cos(time*.007)*cacheSize.Height*.05),width,height);
+    layer.DrawImage(nebula,target,0,0,nebula.Width,nebula.Height,GraphicsUnit.Pixel,attributes);
+   }
+   cachedAt=time;cachedOpacity=frame.Nebula;cachedColour=BackgroundColour.ToArgb();
+   var data=nebulaCache.LockBits(new Rectangle(Point.Empty,cacheSize),ImageLockMode.ReadOnly,PixelFormat.Format32bppPArgb);
+   try{int length=data.Stride*data.Height;if(nebulaPixels==null||nebulaPixels.Length!=length)nebulaPixels=new byte[length];Marshal.Copy(data.Scan0,nebulaPixels,0,length);}finally{nebulaCache.UnlockBits(data);}
   }
+  // Opaque native stretch avoids GDI+'s per-pixel alpha/resampling path at 4K.
+  var header=new BitmapHeader {Size=40,Width=cacheSize.Width,Height=-cacheSize.Height,Planes=1,Bits=32,ImageSize=(uint)nebulaPixels.Length};
+  IntPtr dc=g.GetHdc();bool copied=false;
+  try{int previous=SetStretchBltMode(dc,3);SetBrushOrgEx(dc,0,0,IntPtr.Zero);copied=StretchDIBits(dc,0,0,size.Width,size.Height,0,0,cacheSize.Width,cacheSize.Height,nebulaPixels,ref header,0,0x00CC0020)>0;SetStretchBltMode(dc,previous);}finally{g.ReleaseHdc(dc);}
+  if(!copied)g.DrawImage(nebulaCache,new Rectangle(Point.Empty,size));
  }
  public void Foreground(Graphics g,Size size,Settings options,FlightFrame frame,double time){
   if(frame.Alert>.001){
@@ -67,11 +90,9 @@ sealed class FlightPainter : IDisposable {
    float nextSize=Math.Max(8,Math.Min(14,size.Width/65f));
    if(bridgeFont==null||Math.Abs(fontSize-nextSize)>.1){if(bridgeFont!=null)bridgeFont.Dispose();fontSize=nextSize;bridgeFont=new Font("Consolas",fontSize,FontStyle.Regular);}
    double heading=NavigationMath.Heading(NavigationSession.Heading,frame.OffsetX);
-   string label=string.Format(System.Globalization.CultureInfo.InvariantCulture,"WARP {0:0.00}   HEADING {1:000.0}\nSIM STARDATE {2:00000.000}{3}",frame.Warp,heading,NavigationMath.Stardate(DateTime.Now),frame.Alert>.1?"   RED ALERT":"");
-   string remembrance=options.PatrickTribute?"\nIn memory of Sir Patrick Stewart\n28/10/2026 - SIM STARDATE "+NavigationMath.Stardate(new DateTime(2026,10,28)).ToString("00000.000",System.Globalization.CultureInfo.InvariantCulture):"";
-   label+=remembrance;
+   string label=string.Format(System.Globalization.CultureInfo.InvariantCulture,"WARP {0:0.00}   HEADING {1:000.0}\nSTARDATE {2:00000.000}{3}",frame.Warp,heading,NavigationMath.Stardate(DateTime.Now),frame.Alert>.1?"   RED ALERT":"");
    // Reserve alert text space so both the position and panel dimensions stay fixed.
-   SizeF measured=g.MeasureString("WARP 9.99   HEADING 359.9\nSIM STARDATE 99999.999   RED ALERT"+remembrance,bridgeFont);float width=Math.Min(size.Width-20,measured.Width+24),height=measured.Height+20;
+   SizeF measured=g.MeasureString("WARP 9.99   HEADING 359.9\nSTARDATE 99999.999   RED ALERT",bridgeFont);float width=Math.Min(size.Width-20,measured.Width+24),height=measured.Height+20;
    float x=10,y=Math.Max(10,size.Height-height-10);
    using(var path=Theme.Rounded(new RectangleF(x,y,width,height),8))using(var fill=new SolidBrush(Color.FromArgb(155,12,19,29)))using(var ink=new SolidBrush(Color.FromArgb(180,180,210,240))){g.FillPath(fill,path);g.DrawString(label,bridgeFont,ink,new RectangleF(x+12,y+10,width-24,height-16));}
   }
@@ -86,6 +107,6 @@ sealed class FlightPainter : IDisposable {
   for(int i=0;i<samples;i++){double t=i/(double)rate,frequency=t<.3?660:440,envelope=Math.Min(1,Math.Min(t/.04,(.6-t)/.08));writer.Write((short)(3500*Math.Max(0,envelope)*Math.Sin(2*Math.PI*frequency*t)));}
   writer.Flush();wave.Position=0;chime=new SoundPlayer(wave);chime.Load();
  }
- public void Dispose(){if(chime!=null){chime.Stop();chime.Dispose();}if(wave!=null)wave.Dispose();if(nebula!=null)nebula.Dispose();if(bridgeFont!=null)bridgeFont.Dispose();}
+ public void Dispose(){if(chime!=null){chime.Stop();chime.Dispose();}if(wave!=null)wave.Dispose();if(nebula!=null)nebula.Dispose();if(nebulaCache!=null)nebulaCache.Dispose();if(bridgeFont!=null)bridgeFont.Dispose();}
 }
 }
