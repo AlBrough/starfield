@@ -64,6 +64,10 @@ The stardate uses the computer's local date and time, independent of the preview
 
 Run `verify-navigation.ps1` to check heading randomness/ranges, compass wrapping, calendar anchors, visible clock ticks, year rollover and leap-day progression.
 
+**Remember Sir Patrick Stewart** is an optional dedication beneath the bridge readout. Enable Bridge display first, then enable the remembrance option. It shows his name, 28/10/2026 and the date's simulated TNG-era stardate, 41821.918. The fixed value is calculated at the start of that calendar date, not a claimed time of his passing. The separate live stardate continues to advance. The option defaults off and is saved with other preferences.
+
+The date follows the user's requested remembrance and reporting of his death on 28 October, including [the Associated Press obituary](https://apnews.com/article/8b38054ff74d4187a32158d78e345ad7). [StarTrek.com's tribute](https://www.startrek.com/en-un/news/in-memory-of-sir-patrick-stewart-1940-2026) provides further context. The app includes original dedication text only, without photographs or copied tribute text. Run `verify-tribute.ps1` to check the fixed date conversion, optional control, settings compatibility and rendering.
+
 ## Licence
 
 Copyright (c) 2026 Al Brough. Licensed under the [MIT licence](LICENSE), allowing personal and commercial use, modification and redistribution with the licence notice preserved. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependency and reference-image boundaries. Include both files when sharing the built application.

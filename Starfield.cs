@@ -15,6 +15,7 @@ public class Settings {
  public bool Motion=true, Shift=false, NaturalColours=true, DensityCycle=true;
  public int DensityMinutes=12;
  public bool Engagement, CruiseVariation, CourseCorrections, NebulaPassages, BridgeDisplay, RedAlert, AlertSound;
+ public bool PatrickTribute;
  float warpFactor=-1;
  public float WarpFactor {get{return warpFactor<1?WarpMath.FromLegacySpeed(Speed):warpFactor;}set{warpFactor=WarpMath.Clamp(value);}}
  public string Centre="Desktop";
@@ -169,7 +170,9 @@ public class Configuration : Form {
   Check("Vary cruising speed",settings.CruiseVariation,delegate(bool v){settings.CruiseVariation=v;});
   Check("Course corrections",settings.CourseCorrections,delegate(bool v){settings.CourseCorrections=v;});
   Check("Nebula passages",settings.NebulaPassages,delegate(bool v){settings.NebulaPassages=v;});
-  Check("Bridge display",settings.BridgeDisplay,delegate(bool v){settings.BridgeDisplay=v;});
+  var bridge=Check("Bridge display",settings.BridgeDisplay,delegate(bool v){settings.BridgeDisplay=v;});
+  var tribute=Check("Remember Sir Patrick Stewart",settings.PatrickTribute,delegate(bool v){settings.PatrickTribute=v;});
+  tribute.Enabled=settings.BridgeDisplay;bridge.CheckedChanged+=delegate {tribute.Enabled=settings.BridgeDisplay;};
   Check("Red alert",settings.RedAlert,delegate(bool v){settings.RedAlert=v;});
   var alertSound=Check("Alert sound (optional)",settings.AlertSound,delegate(bool v){settings.AlertSound=v;});
   alertSound.Enabled=settings.RedAlert;

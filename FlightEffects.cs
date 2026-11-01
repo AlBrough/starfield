@@ -68,8 +68,10 @@ sealed class FlightPainter : IDisposable {
    if(bridgeFont==null||Math.Abs(fontSize-nextSize)>.1){if(bridgeFont!=null)bridgeFont.Dispose();fontSize=nextSize;bridgeFont=new Font("Consolas",fontSize,FontStyle.Regular);}
    double heading=NavigationMath.Heading(NavigationSession.Heading,frame.OffsetX);
    string label=string.Format(System.Globalization.CultureInfo.InvariantCulture,"WARP {0:0.00}   HEADING {1:000.0}\nSIM STARDATE {2:00000.000}{3}",frame.Warp,heading,NavigationMath.Stardate(DateTime.Now),frame.Alert>.1?"   RED ALERT":"");
+   string remembrance=options.PatrickTribute?"\nIn memory of Sir Patrick Stewart\n28/10/2026 - SIM STARDATE "+NavigationMath.Stardate(new DateTime(2026,10,28)).ToString("00000.000",System.Globalization.CultureInfo.InvariantCulture):"";
+   label+=remembrance;
    // Reserve alert text space so both the position and panel dimensions stay fixed.
-   SizeF measured=g.MeasureString("WARP 9.99   HEADING 359.9\nSIM STARDATE 99999.999   RED ALERT",bridgeFont);float width=Math.Min(size.Width-20,measured.Width+24),height=measured.Height+20;
+   SizeF measured=g.MeasureString("WARP 9.99   HEADING 359.9\nSIM STARDATE 99999.999   RED ALERT"+remembrance,bridgeFont);float width=Math.Min(size.Width-20,measured.Width+24),height=measured.Height+20;
    float x=10,y=Math.Max(10,size.Height-height-10);
    using(var path=Theme.Rounded(new RectangleF(x,y,width,height),8))using(var fill=new SolidBrush(Color.FromArgb(155,12,19,29)))using(var ink=new SolidBrush(Color.FromArgb(180,180,210,240))){g.FillPath(fill,path);g.DrawString(label,bridgeFont,ink,new RectangleF(x+12,y+10,width-24,height-16));}
   }

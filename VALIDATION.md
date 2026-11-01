@@ -77,3 +77,11 @@ Version 0.1.2 was promoted to a stable GitHub release at the owner's explicit re
 - Navigation checks pass for random heading range and diversity, stable session heading, compass wrap and rounding, date anchors, visible ticks over 40 seconds, year rollover and even leap-day progression.
 - The bridge pixel-bounds check passes with the additional stardate digit. Existing effects, warp, density, behaviour and simulated layout checks pass.
 - NAV-01 in CHECKLIST.md is the next manual test. No exact canonical stardate conversion is claimed.
+
+## Optional remembrance - 02/11/2026
+
+- Version 0.1.9 adds Remember Sir Patrick Stewart as an opt-in bridge dedication with 28/10/2026 and simulated stardate 41821.918. The latter uses the start of the date, not a claimed time of death.
+- The death date was checked against contemporary reporting, with the AP obituary and official StarTrek.com tribute linked in README.md. No photographs, recordings or copied tribute prose are included.
+- Tests pass for date conversion, bridge-display dependency, checkbox binding, XML persistence, older settings opting out and actual rendering. The rendered dedication was visually inspected.
+- Existing navigation, bridge bounds, effects, warp, density, behaviour and simulated layout checks pass.
+- MEM-01 in CHECKLIST.md is the next manual acceptance check. Earlier recorded passes and pending checks remain preserved.
